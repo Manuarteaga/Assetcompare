@@ -331,8 +331,12 @@ for _, row in df_activos.iterrows():
     if not pid or not nombre_row:
         continue
     cat = str(row.get("Categoria", "ETF")).strip()
-    try:
-        ter_num = float(str(row.get("TER_Pct", 0)).replace(",", "."))
+        try:
+        raw_ter_val = str(row.get("TER_Pct", 0)).replace(",", ".")
+        ter_num = float(raw_ter_val)
+        # Si por alguna razón viene en decimal puro menor de 0.01 y no es cero exacto, lo pasamos a porcentaje
+        if 0 < ter_num < 0.01:
+            ter_num = ter_num * 100
     except ValueError:
         ter_num = 0.0
 
