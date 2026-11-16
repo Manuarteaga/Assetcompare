@@ -55,10 +55,32 @@ def cargar_desde_sheets():
 def consultar_yahoo(ticker_o_isin: str, categoria: str):
     tk = yf.Ticker(ticker_o_isin)
     info = tk.info
-    nombre = (
+
+    raw_name = (
         info.get("shortName") or info.get("longName") or ticker_o_isin
-    )[:36]
-    isin = info.get("isin") or ticker_o_isin
+    )
+
+    # Limpieza automática inteligente: si Yahoo devuelve un código interno (empieza por 0P) 
+    # o el propio ticker, extraemos un nombre comercial limpio y profesional automáticamente.
+    if (
+        raw_name.startswith("0P")
+        or raw_name == ticker_o_isin
+        or ".F" in raw_name
+    ):
+        # Si es un fondo indexado o monetario de Morningstar/Yahoo, le asignamos una nomenclatura limpia automática
+        sufijo_cat = (
+            "Fondo Indexado Global"
+            if categoria == "Fondo Indexado"
+            else categoria
+        )
+        nombre = f"{sufijo_cat} ({ticker_o_isin})"
+    else:
+        # Si es una acción o ETF con nombre comercial válido (ej. Apple Inc. o iShares S&P 500), lo usamos tal cual
+        nombre = raw_name[:40]
+
+    isin = info.get("isin") or (
+        ticker_o_isin if len(ticker_o_isin) >= 10 else "IE-AUTO"
+    )
 
     raw_ter = info.get("annualReportExpenseRatio") or info.get(
         "netExpenseRatio"
@@ -84,7 +106,7 @@ def consultar_yahoo(ticker_o_isin: str, categoria: str):
         ret_str = (
             f"TIR ~{div_yield*100:.2f}%"
             if div_yield
-            else "Sincronizado Yahoo"
+            else "Automático (Yahoo)"
         )
 
     replica = (
@@ -108,6 +130,7 @@ def consultar_yahoo(ticker_o_isin: str, categoria: str):
         "fiscalidad": fiscalidad,
         "riesgo": riesgo,
     }
+
 
 
 def autocompletar_filas_incompletas(worksheet):
