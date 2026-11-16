@@ -103,4 +103,3 @@ def consultar_yahoo(ticker_o_isin: str, categoria: str):
         p_ini = hist["Close"].iloc[0]
         p_fin = hist["Close"].iloc[-1]
         years = len(hist) / 252.0
-        
