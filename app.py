@@ -23,12 +23,8 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-SHEET_URL = (
-    "https://docs.google.com/spreadsheets/d/196icfDqkEMst54_Ze13CQ-lEBo47vCAKR7lGWFKbf6w/edit"
-)
-SHEET_CSV_URL = (
-    "https://docs.google.com/spreadsheets/d/196icfDqkEMst54_Ze13CQ-lEBo47vCAKR7lGWFKbf6w/gviz/tq?tqx=out:csv&sheet=Activos"
-)
+SHEET_URL = "https://docs.google.com/spreadsheets/d/196icfDqkEMst54_Ze13CQ-lEBo47vCAKR7lGWFKbf6w/edit"
+SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/196icfDqkEMst54_Ze13CQ-lEBo47vCAKR7lGWFKbf6w/gviz/tq?tqx=out:csv&sheet=Activos"
 
 
 def get_gspread_client():
@@ -59,38 +55,16 @@ def cargar_desde_sheets():
 def consultar_yahoo(ticker_o_isin: str, categoria: str):
     tk = yf.Ticker(ticker_o_isin)
     info = tk.info
-
-    raw_name = (
+    nombre = (
         info.get("shortName") or info.get("longName") or ticker_o_isin
-    )
-
-    if (
-        raw_name.startswith("0P")
-        or raw_name == ticker_o_isin
-        or ".F" in raw_name
-    ):
-        sufijo_cat = (
-            "Fondo Indexado Global"
-            if categoria == "Fondo Indexado"
-            else categoria
-        )
-        nombre = f"{sufijo_cat} ({ticker_o_isin})"
-    else:
-        nombre = raw_name[:40]
-
-    isin = info.get("isin") or (
-        ticker_o_isin if len(ticker_o_isin) >= 10 else "IE-AUTO"
-    )
+    )[:36]
+    isin = info.get("isin") or ticker_o_isin
 
     raw_ter = info.get("annualReportExpenseRatio") or info.get(
         "netExpenseRatio"
     )
     if raw_ter is not None:
-        ter = (
-            round(float(raw_ter) * 100, 2)
-            if float(raw_ter) < 0.05
-            else round(float(raw_ter), 2)
-        )
+        ter = round(float(raw_ter) * 100, 2)
     else:
         ter = (
             0.00
@@ -110,7 +84,7 @@ def consultar_yahoo(ticker_o_isin: str, categoria: str):
         ret_str = (
             f"TIR ~{div_yield*100:.2f}%"
             if div_yield
-            else "Automático (Yahoo)"
+            else "Sincronizado Yahoo"
         )
 
     replica = (
@@ -137,6 +111,7 @@ def consultar_yahoo(ticker_o_isin: str, categoria: str):
 
 
 def autocompletar_filas_incompletas(worksheet):
+    """Detecta filas añadidas manualmente en Sheets (solo Ticker/ISIN) y completa el resto con Yahoo."""
     if not worksheet:
         return False
     filas = worksheet.get_all_values()
@@ -147,14 +122,15 @@ def autocompletar_filas_incompletas(worksheet):
         while len(fila) < 12:
             fila.append("")
 
-        ticker_o_isin = fila[1].strip().upper()
-        isin_col = fila[2].strip().upper()
-        nombre_actual = fila[3].strip()
-        categoria = fila[4].strip() or "ETF"
-        ter_actual = fila[5].strip()
+        ticker_o_isin = fila[1].strip().upper()  # Columna B (Ticker_Yahoo)
+        isin_col = fila[2].strip().upper()  # Columna C (ISIN)
+        nombre_actual = fila[3].strip()  # Columna D (Nombre)
+        categoria = fila[4].strip() or "ETF"  # Columna E (Categoria)
+        ter_actual = fila[5].strip()  # Columna F (TER_Pct)
 
         busqueda = ticker_o_isin or isin_col
 
+        # Si hay ticker/ISIN y falta el TER o el nombre dice "Pendiente Yahoo", completar fila
         if busqueda and (
             not ter_actual
             or not nombre_actual
@@ -191,6 +167,7 @@ def autocompletar_filas_incompletas(worksheet):
     return hubo_cambios
 
 
+# Cargar datos desde Google Sheets
 try:
     df_activos, worksheet = cargar_desde_sheets()
     if worksheet and autocompletar_filas_incompletas(worksheet):
@@ -202,6 +179,7 @@ except Exception as e:
     st.error(f"Error al conectar con Google Sheets: {e}")
     st.stop()
 
+# Barra superior en Streamlit
 col1, col2, col3, col4 = st.columns([3.2, 1.8, 1.8, 1.6])
 with col1:
     nuevo_ticker = (
@@ -231,6 +209,7 @@ with col4:
         use_container_width=True,
     )
 
+# Guardar desde la barra de búsqueda de la web
 if btn_agregar and nuevo_ticker:
     with st.spinner(
         f"Consultando {nuevo_ticker} en Yahoo Finance y guardando en Google Sheets..."
@@ -272,6 +251,7 @@ if btn_agregar and nuevo_ticker:
                     f"🔄 **{datos['nombre']}** actualizado en tu Google Sheet."
                 )
             else:
+                # Buscar la primera fila vacía (sin Ticker en columna B) para no saltar hasta la fila 51
                 col_b = worksheet.col_values(2)
                 primera_libre = len(col_b) + 1
                 worksheet.update(
@@ -288,6 +268,7 @@ if btn_agregar and nuevo_ticker:
                 "Configura `[gcp_service_account]` en Streamlit Secrets para guardar en Drive."
             )
 
+# Sincronización completa bajo demanda
 if btn_sync and worksheet:
     with st.spinner(
         "Sincronizando todos los activos de Google Sheets con Yahoo Finance..."
@@ -308,8 +289,11 @@ if btn_sync and worksheet:
                 except Exception:
                     pass
         df_activos, _ = cargar_desde_sheets()
-        st.success("✅ Todos los activos se han sincronizado con Yahoo Finance.")
+        st.success(
+            "✅ Todos los activos se han sincronizado con Yahoo Finance."
+        )
 
+# Inyectar datos en tu plantilla index.html
 badge_map = {
     "Fondo Indexado": "text-sky-400",
     "ETF": "text-indigo-400",
@@ -325,10 +309,7 @@ for _, row in df_activos.iterrows():
         continue
     cat = str(row.get("Categoria", "ETF")).strip()
     try:
-        raw_ter_val = str(row.get("TER_Pct", 0)).replace(",", ".")
-        ter_num = float(raw_ter_val)
-        if 0 < ter_num < 0.01:
-            ter_num = ter_num * 100
+        ter_num = float(str(row.get("TER_Pct", 0)).replace(",", "."))
     except ValueError:
         ter_num = 0.0
 
@@ -384,4 +365,14 @@ injection_script = f"""
             const selA = document.getElementById(idA);
             const selB = document.getElementById(idB);
             if (selA && selA.options.length > 0) selA.selectedIndex = 0;
-            if (selB
+            if (selB && selB.options.length > 1) selB.selectedIndex = 1;
+        }});
+
+        updateComparison();
+    }});
+</script>
+</body>
+"""
+
+html_final = html_code.replace("</body>", injection_script)
+st.components.v1.html(html_final, height=960, scrolling=True)
