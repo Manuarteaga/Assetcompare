@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale5.0">
+    <title>AssetCompare | Comparador de Vehículos de Inversión</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        slate: {
+                            850: '#151e32',
+                            900: '#0f172a',
+                            950: '#090d16',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #090d16;
+            color: #f8fafc;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.05) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.05) 0px, transparent 50%);
+        }
+        .glass-card {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(51, 65, 85, 0.6);
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-sky-500/30 selection:text-sky-200 p-3 sm:p-6">
+
+    <!-- Navbar -->
+    <header class="border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md sticky top-0 z-30 rounded-xl mb-6">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-sky-500/20">
+                    <svg class="w-5 h-5 text-slate-950" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                </div>
+                <div>
+                    <span class="font-bold text-lg tracking-tight text-white">Asset<span class="text-sky-400">Compare</span></span>
+                    <span class="hidden sm:inline-block ml-2 text-[11px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">Acciones vs Fondos vs ETFs vs Monetarios</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-3 text-xs text-slate-400">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 font-mono">
+                    <span class="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse"></span>
+                    Comparador Activo
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-6xl w-full mx-auto space-y-6">
+
+        <!-- Selector de Activos -->
+        <section class="glass-card rounded-2xl p-5 sm:p-7 shadow-xl">
+            <div class="max-w-3xl mx-auto text-center space-y-2 mb-6">
+                <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+                    ¿Qué instrumento se adapta mejor a tu estrategia?
+                </h1>
+                <p class="text-sm sm:text-base text-slate-400">
+                    Selecciona dos o más vehículos para comparar sus costes, ventajas fiscales (traspasabilidad), liquidez y perfil de riesgo.
+                </p>
+            </div>
+
+            <!-- Asset Selector Chips -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-3xl mx-auto">
+                <button type="button" onclick="toggleAsset('acciones')" id="btn-acciones" class="asset-btn p-3 rounded-xl border border-sky-500 bg-sky-500/15 text-white text-left transition cursor-pointer flex flex-col justify-between">
+                    <div class="flex items-center justify-between w-full mb-2">
+                        <span class="font-mono text-xs text-sky-400 font-semibold">01</span>
+                        <span class="check-icon w-4 h-4 rounded-full bg-sky-500 text-slate-950 flex items-center justify-center text-[10px] font-bold">✓</span>
+                    </div>
+                    <div>
+                        <span class="font-semibold text-sm block">Acciones Directas</span>
+                        <span class="text-[11px] text-slate-400">Empresas individuales</span>
+                    </div>
+                </button>
+
+                <button type="button" onclick="toggleAsset('fondos')" id="btn-fondos" class="asset-btn p-3 rounded-xl border border-sky-500 bg-sky-500/15 text-white text-left transition cursor-pointer flex flex-col justify-between">
+                    <div class="flex items-center justify-between w-full mb-2">
+                        <span class="font-mono text-xs text-sky-400 font-semibold">02</span>
+                        <span class="check-icon w-4 h-4 rounded-full bg-sky-500 text-slate-950 flex items-center justify-center text-[10px] font-bold">✓</span>
+                    </div>
+                    <div>
+                        <span class="font-semibold text-sm block">Fondos Indexados</span>
+                        <span class="text-[11px] text-slate-400">Gestión pasiva / Traspasables</span>
+                    </div>
+                </button>
+
+                <button type="button" onclick="toggleAsset('etfs')" id="btn-etfs" class="asset-btn p-3 rounded-xl border border-sky-500 bg-sky-500/15 text-white text-left transition cursor-pointer flex flex-col justify-between">
+                    <div class="flex items-center justify-between w-full mb-2">
+                        <span class="font-mono text-xs text-sky-400 font-semibold">03</span>
+                        <span class="check-icon w-4 h-4 rounded-full bg-sky-500 text-slate-950 flex items-center justify-center text-[10px] font-bold">✓</span>
+                    </div>
+                    <div>
+                        <span class="font-semibold text-sm block">ETFs</span>
+                        <span class="text-[11px] text-slate-400">Cotizados en bolsa en tiempo real</span>
+                    </div>
+                </button>
+
+                <button type="button" onclick="toggleAsset('monetarios')" id="btn-monetarios" class="asset-btn p-3 rounded-xl border border-sky-500 bg-sky-500/15 text-white text-left transition cursor-pointer flex flex-col justify-between">
+                    <div class="flex items-center justify-between w-full mb-2">
+                        <span class="font-mono text-xs text-sky-400 font-semibold">04</span>
+                        <span class="check-icon w-4 h-4 rounded-full bg-sky-500 text-slate-950 flex items-center justify-center text-[10px] font-bold">✓</span>
+                    </div>
+                    <div>
+                        <span class="font-semibold text-sm block">Fondos Monetarios</span>
+                        <span class="text-[11px] text-slate-400">Alternativa a depósitos / Corto plazo</span>
+                    </div>
+                </button>
+            </div>
+        </section>
+
+        <!-- Matriz Comparativa (Dinámica) -->
+        <div class="glass-card rounded-2xl p-6 overflow-x-auto">
+            <h3 class="font-semibold text-base text-white mb-4">Matriz de Características y Costes</h3>
+            <div id="comparison-table-container">
+                <!-- Generado por JS -->
+            </div>
+        </div>
+
+        <!-- Simulador de Crecimiento a 15-20 Años -->
+        <div class="glass-card rounded-2xl p-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h3 class="font-semibold text-base text-white">Simulador de Impacto Fiscal y Costes (20 Años)</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Compara cómo afecta la fricción fiscal (traspasabilidad) y los costes de gestión a largo plazo.</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="text-right">
+                        <span class="text-xs text-slate-400 block">Aportación inicial: <strong id="lbl-init" class="text-white font-mono">$10,000</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controles de Simulación -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+                <div>
+                    <label class="text-xs text-slate-300 block mb-1.5">Capital Inicial ($): <strong id="val-init" class="font-mono text-sky-400">10,000</strong></label>
+                    <input type="range" id="range-init" min="1000" max="50000" step="1000" value="10000" oninput="runSimulation()" class="w-full accent-sky-500 cursor-pointer h-1.5 bg-slate-800 rounded-lg">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-300 block mb-1.5">Aportación Mensual ($): <strong id="val-monthly" class="font-mono text-sky-400">300</strong></label>
+                    <input type="range" id="range-monthly" min="0" max="2000" step="50" value="300" oninput="runSimulation()" class="w-full accent-sky-500 cursor-pointer h-1.5 bg-slate-800 rounded-lg">
+                </div>
+            </div>
+
+            <!-- Resultados de la Simulación -->
+            <div id="simulation-results" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Tarjetas dinámicas -->
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800/60 py-5 mt-8 text-center text-xs text-slate-500 px-4">
+        <p><strong>AssetCompare (Herramienta de Apoyo Educativo):</strong> Diseñado para comparar la eficiencia fiscal y de costes entre instrumentos financieros.</p>
+    </footer>
+
+    <script>
+        const ASSETS = {
+            acciones: {
+                name: "Acciones Directas",
+                ter: "0.00%",
+                fiscality: "Tributa al vender (Sin traspaso directo)",
+                liquidity: "Inmediata (Horario de mercado)",
+                risk: "Muy Alto (Riesgo de empresa individual)",
+                goal: "Dividendos / Crecimiento específico de valor",
+                returnEst: 0.085,
+                terVal: 0.001
+            },
+            fondos: {
+                name: "Fondos Indexados",
+                ter: "0.10% - 0.30%",
+                fiscality: "Excelente: Traspasables sin pasar por caja (Hacienda)",
+                liquidity: "Diaria (Valor liquidativo de cierre)",
+                risk: "Medio / Diversificado globalmente",
+                goal: "Inversión pasiva a muy largo plazo (Buy & Hold)",
+                returnEst: 0.08,
+                terVal: 0.002
+            },
+            etfs: {
+                name: "ETFs (Exchange Traded Funds)",
+                ter: "0.05% - 0.20%",
+                fiscality: "Tributa al vender (Exige pasar por caja para cambiar de activo)",
+                liquidity: "Inmediata (Cotiza en tiempo real en bolsa)",
+                risk: "Medio / Diversificado globalmente",
+                goal: "Trading táctico o inversión indexada con ejecución en vivo",
+                returnEst: 0.08,
+                terVal: 0.0015
+            },
+            monetarios: {
+                name: "Fondos Monetarios",
+                ter: "0.05% - 0.15%",
+                fiscality: "Excelente: Traspasables y diferimiento fiscal",
+                liquidity: "1 a 2 días hábiles",
+                risk: "Muy Bajo (Deuda soberana corto plazo / Repo)",
+                goal: "Fondo de emergencia o aparcar liquidez con rentabilidad tipo interés oficial",
+                returnEst: 0.032,
+                terVal: 0.001
+            }
+        };
+
+        let activeAssets = ['acciones', 'fondos', 'etfs', 'monetarios'];
+
+        function toggleAsset(key) {
+            const index = activeAssets.indexOf(key);
+            const btn = document.getElementById(`btn-${key}`);
+            
+            if (index > -1) {
+                if (activeAssets.length === 1) return; // Mantener al menos 1
+                activeAssets.splice(index, 1);
+                btn.className = "asset-btn p-3 rounded-xl border border-slate-700 bg-slate-900/40 text-slate-400 text-left transition cursor-pointer flex flex-col justify-between opacity-60";
+                btn.querySelector('.check-icon').style.display = 'none';
+            } else {
+                activeAssets.push(key);
+                btn.className = "asset-btn p-3 rounded-xl border border-sky-500 bg-sky-500/15 text-white text-left transition cursor-pointer flex flex-col justify-between";
+                btn.querySelector('.check-icon').style.display = 'flex';
+            }
+            renderTable();
+            runSimulation();
+        }
+
+        function renderTable() {
+            let html = `
+                <table class="w-full text-left text-xs sm:text-sm">
+                    <thead>
+                        <tr class="border-b border-slate-800 text-slate-400">
+                            <th class="py-3 px-4">Característica</th>
+            `;
+            activeAssets.forEach(k => {
+                html += `<th class="py-3 px-4 font-semibold text-white">${ASSETS[k].name}</th>`;
+            });
+            html += `</tr></thead><tbody class="divide-y divide-slate-800/60">`;
+
+            const rows = [
+                { label: 'Costes de Gestión (TER)', key: 'ter' },
+                { label: 'Eficiencia Fiscal (Traspasos)', key: 'fiscality' },
+                { label: 'Liquidez y Ejecución', key: 'liquidity' },
+                { label: 'Nivel de Riesgo', key: 'risk' },
+                { label: 'Objetivo Principal', key: 'goal' }
+            ];
+
+            rows.forEach(r => {
+                html += `<tr><td class="py-3.5 px-4 font-medium text-slate-300">${r.label}</td>`;
+                activeAssets.forEach(k => {
+                    html += `<td class="py-3.5 px-4 text-slate-400">${ASSETS[k][r.key]}</td>`;
+                });
+                html += `</tr>`;
+            });
+
+            html += `</tbody></table>`;
+            document.getElementById('comparison-table-container').innerHTML = html;
+        }
+
+        function runSimulation() {
+            const init = parseFloat(document.getElementById('range-init').value);
+            const monthly = parseFloat(document.getElementById('range-monthly').value);
+
+            document.getElementById('val-init').textContent = init.toLocaleString('en-US');
+            document.getElementById('lbl-init').textContent = '$' + init.toLocaleString('en-US');
+            document.getElementById('val-monthly').textContent = monthly.toLocaleString('en-US');
+
+            const years = 20;
+            const months = years * 12;
+
+            let html = '';
+            activeAssets.forEach(k => {
+                const asset = ASSETS[k];
+                const rMonthly = (asset.returnEst - asset.terVal) / 12;
+                
+                let total = init;
+                for(let m = 0; m < months; m++) {
+                    total = (total + monthly) * (1 + rMonthly);
+                }
+
+                const totalContributed = init + (monthly * months);
+                const gains = total - totalContributed;
+
+                html += `
+                    <div class="bg-slate-950/80 p-4 rounded-xl border border-slate-800 flex flex-col justify-between">
+                        <div>
+                            <span class="text-xs font-semibold text-sky-400 uppercase tracking-wider block mb-1">${asset.name}</span>
+                            <span class="text-xl font-bold font-mono text-white block">$${Math.round(total).toLocaleString('en-US')}</span>
+                            <span class="text-[11px] text-slate-400 block mt-0.5">Aportado: $${Math.round(totalContributed).toLocaleString('en-US')}</span>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-slate-900 text-xs">
+                            <span class="text-emerald-400 font-mono font-medium block">+${Math.round(gains).toLocaleString('en-US')} beneficios</span>
+                            <span class="text-[10px] text-slate-500">Rentabilidad estimada: ${(asset.returnEst * 100).toFixed(1)}% anual</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('simulation-results').innerHTML = html;
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            renderTable();
+            runSimulation();
+        });
+    </script>
+</body>
+</html>
