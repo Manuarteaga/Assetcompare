@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AssetCompare Pro | Comparador A vs B por Categoría</title>
+    <title>AssetCompare Pro | Comparador con Ticker / ISIN Personalizado</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -51,18 +51,18 @@
             <div class="flex items-center gap-2.5">
                 <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-sky-500/20">
                     <svg class="w-5 h-5 text-slate-950" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                 </div>
                 <div>
                     <span class="font-bold text-lg tracking-tight text-white">Asset<span class="text-sky-400">Compare</span> Pro</span>
-                    <span class="hidden sm:inline-block ml-2 text-[11px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">Duelo A vs B por Categoría</span>
+                    <span class="hidden sm:inline-block ml-2 text-[11px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">Buscador Ticker / ISIN</span>
                 </div>
             </div>
             <div class="flex items-center gap-3 text-xs text-slate-400">
                 <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 font-mono">
                     <span class="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse"></span>
-                    Comparativa Activa
+                    Motor Activo
                 </span>
             </div>
         </div>
@@ -71,6 +71,31 @@
     <!-- Main Content -->
     <main class="flex-1 max-w-7xl w-full mx-auto space-y-6">
 
+        <!-- Sección de Añadir Ticker / ISIN Personalizado -->
+        <section class="glass-card rounded-2xl p-5 sm:p-6 shadow-xl border-sky-500/30">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-base font-semibold text-white flex items-center gap-2">
+                        <svg class="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        Añadir Producto Personalizado por Ticker o ISIN
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-0.5">Introduce cualquier símbolo o ISIN externo para estimar sus datos e integrarlo en la matriz.</p>
+                </div>
+                <div class="flex items-center gap-2 w-full md:w-auto">
+                    <input type="text" id="custom-input" placeholder="Ej. TSLA, IE00B4L5Y983..." class="bg-slate-950 border border-slate-700 rounded-xl px-4 py-2 text-xs text-white font-mono uppercase w-full md:w-48 focus:outline-none focus:border-sky-500">
+                    <select id="custom-type" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-sky-500">
+                        <option value="ETF">ETF</option>
+                        <option value="Fondo Indexado">Fondo</option>
+                        <option value="Acción">Acción</option>
+                        <option value="Monetario">Monetario</option>
+                    </select>
+                    <button type="button" onclick="addCustomProduct()" class="bg-sky-500 hover:bg-sky-400 text-slate-950 font-semibold text-xs px-4 py-2 rounded-xl transition cursor-pointer whitespace-nowrap shadow-md shadow-sky-500/20">
+                        Añadir
+                    </button>
+                </div>
+            </div>
+        </section>
+
         <!-- Selectores A vs B por Categoría -->
         <section class="glass-card rounded-2xl p-5 sm:p-7 shadow-xl">
             <div class="max-w-3xl mx-auto text-center space-y-2 mb-6">
@@ -78,11 +103,11 @@
                     Compara Productos Frente a Frente (A vs B)
                 </h1>
                 <p class="text-sm sm:text-base text-slate-400">
-                    Selecciona dos opciones dentro de cada categoría para enfrentar sus comisiones (TER), rentabilidad histórica y características clave.
+                    Selecciona dos opciones dentro de cada categoría para enfrentar sus comisiones (TER) y rentabilidad.
                 </p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4" id="categories-grid">
                 
                 <!-- 01. Fondos Indexados (A vs B) -->
                 <div class="bg-slate-950/80 p-4 rounded-xl border border-slate-800 flex flex-col justify-between space-y-3">
@@ -90,21 +115,15 @@
                         <span class="text-xs text-sky-400 font-mono font-semibold uppercase block mb-2">01. Fondo vs Fondo</span>
                         
                         <label class="text-[11px] text-slate-400 block">Opción A</label>
-                        <select id="sel-fondo-a" onchange="updateComparison()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white font-mono focus:outline-none focus:border-sky-500 mb-2.5">
+                        <select id="sel-fondo-a" onchange="updateComparison()" class="sel-prod w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white font-mono focus:outline-none focus:border-sky-500 mb-2.5">
                             <option value="vanguard_world" selected>Vanguard Global Stock (IE00B03HCZ61)</option>
                             <option value="amundi_world">Amundi MSCI World (LU1829221024)</option>
-                            <option value="ishares_world_fund">iShares Developed World (IE00B62WCL09)</option>
-                            <option value="vanguard_sp500">Vanguard S&P 500 Index (IE0032620787)</option>
-                            <option value="vanguard_em">Vanguard Emerging Markets (IE0031786696)</option>
                         </select>
 
                         <label class="text-[11px] text-slate-400 block">Opción B</label>
-                        <select id="sel-fondo-b" onchange="updateComparison()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white font-mono focus:outline-none focus:border-sky-500">
+                        <select id="sel-fondo-b" onchange="updateComparison()" class="sel-prod w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white font-mono focus:outline-none focus:border-sky-500">
                             <option value="vanguard_world">Vanguard Global Stock (IE00B03HCZ61)</option>
                             <option value="amundi_world" selected>Amundi MSCI World (LU1829221024)</option>
-                            <option value="ishares_world_fund">iShares Developed World (IE00B62WCL09)</option>
-                            <option value="vanguard_sp500">Vanguard S&P 500 Index (IE0032620787)</option>
-                            <option value="vanguard_em">Vanguard Emerging Markets (IE0031786696)</option>
                         </select>
                     </div>
                     <div id="duel-fondo" class="pt-3 border-t border-slate-900 text-xs space-y-1"></div>
@@ -116,21 +135,15 @@
                         <span class="text-xs text-indigo-400 font-mono font-semibold uppercase block mb-2">02. ETF vs ETF</span>
                         
                         <label class="text-[11px] text-slate-400 block">Opción A</label>
-                        <select id="sel-etf-a" onchange="updateComparison()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white font-mono focus:outline-none focus:border-indigo-500 mb-2.5">
+                        <select id="sel-etf-a" onchange="updateComparison()" class="sel-prod w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white font-mono focus:outline-none focus:border-indigo-500 mb-2.5">
                             <option value="ishares_sp500" selected>iShares Core S&P 500 (CSSPX)</option>
                             <option value="vanguard_vwce">Vanguard FTSE All-World (VWCE)</option>
-                            <option value="ishares_msci_world">iShares Core MSCI World (IWDA)</option>
-                            <option value="nasdaq_qqq">Invesco EQQQ Nasdaq-100</option>
-                            <option value="ishares_gold">iShares Physical Gold ETC (SGLN)</option>
                         </select>
 
                         <label class="text-[11px] text-slate-400 block">Opción B</label>
-                        <select id="sel-etf-b" onchange="updateComparison()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white font-mono focus:outline-none focus:border-indigo-500">
+                        <select id="sel-etf-b" onchange="updateComparison()" class="sel-prod w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white font-mono focus:outline-none focus:border-indigo-500">
                             <option value="ishares_sp500">iShares Core S&P 500 (CSSPX)</option>
                             <option value="vanguard_vwce" selected>Vanguard FTSE All-World (VWCE)</option>
-                            <option value="ishares_msci_world">iShares Core MSCI World (IWDA)</option>
-                            <option value="nasdaq_qqq">Invesco EQQQ Nasdaq-100</option>
-                            <option value="ishares_gold">iShares Physical Gold ETC (SGLN)</option>
                         </select>
                     </div>
                     <div id="duel-etf" class="pt-3 border-t border-slate-900 text-xs space-y-1"></div>
@@ -142,19 +155,15 @@
                         <span class="text-xs text-emerald-400 font-mono font-semibold uppercase block mb-2">03. Monetario vs Monetario</span>
                         
                         <label class="text-[11px] text-slate-400 block">Opción A</label>
-                        <select id="sel-monetary-a" onchange="updateComparison()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white font-mono focus:outline-none focus:border-emerald-500 mb-2.5">
+                        <select id="sel-monetary-a" onchange="updateComparison()" class="sel-prod w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white font-mono focus:outline-none focus:border-emerald-500 mb-2.5">
                             <option value="groupama" selected>Groupama Trésorerie IC</option>
                             <option value="axa_treasury">AXA Court Terme AC</option>
-                            <option value="db_xtrackers">Xtrackers II EUR Overnight (XEON)</option>
-                            <option value="amundi_euro_liq">Amundi Euro Liquidity-Rated</option>
                         </select>
 
                         <label class="text-[11px] text-slate-400 block">Opción B</label>
-                        <select id="sel-monetary-b" onchange="updateComparison()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white font-mono focus:outline-none focus:border-emerald-500">
+                        <select id="sel-monetary-b" onchange="updateComparison()" class="sel-prod w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white font-mono focus:outline-none focus:border-emerald-500">
                             <option value="groupama">Groupama Trésorerie IC</option>
                             <option value="axa_treasury" selected>AXA Court Terme AC</option>
-                            <option value="db_xtrackers">Xtrackers II EUR Overnight (XEON)</option>
-                            <option value="amundi_euro_liq">Amundi Euro Liquidity-Rated</option>
                         </select>
                     </div>
                     <div id="duel-monetary" class="pt-3 border-t border-slate-900 text-xs space-y-1"></div>
@@ -166,21 +175,15 @@
                         <span class="text-xs text-amber-400 font-mono font-semibold uppercase block mb-2">04. Acción vs Acción</span>
                         
                         <label class="text-[11px] text-slate-400 block">Opción A</label>
-                        <select id="sel-stock-a" onchange="updateComparison()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white font-mono focus:outline-none focus:border-amber-500 mb-2.5">
+                        <select id="sel-stock-a" onchange="updateComparison()" class="sel-prod w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white font-mono focus:outline-none focus:border-amber-500 mb-2.5">
                             <option value="apple" selected>Apple Inc. (AAPL)</option>
                             <option value="microsoft">Microsoft Corp. (MSFT)</option>
-                            <option value="nvidia">NVIDIA Corp. (NVDA)</option>
-                            <option value="coca_cola">The Coca-Cola Co. (KO)</option>
-                            <option value="inditex">Inditex S.A. (ITX)</option>
                         </select>
 
                         <label class="text-[11px] text-slate-400 block">Opción B</label>
-                        <select id="sel-stock-b" onchange="updateComparison()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white font-mono focus:outline-none focus:border-amber-500">
+                        <select id="sel-stock-b" onchange="updateComparison()" class="sel-prod w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white font-mono focus:outline-none focus:border-amber-500">
                             <option value="apple">Apple Inc. (AAPL)</option>
                             <option value="microsoft" selected>Microsoft Corp. (MSFT)</option>
-                            <option value="nvidia">NVIDIA Corp. (NVDA)</option>
-                            <option value="coca_cola">The Coca-Cola Co. (KO)</option>
-                            <option value="inditex">Inditex S.A. (ITX)</option>
                         </select>
                     </div>
                     <div id="duel-stock" class="pt-3 border-t border-slate-900 text-xs space-y-1"></div>
@@ -189,17 +192,17 @@
             </div>
         </section>
 
-        <!-- Tabla Comparativa con Filtros por Categoría -->
+        <!-- Matriz Comparativa Detallada -->
         <div class="glass-card rounded-2xl p-6 overflow-x-auto">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
                 <div>
-                    <h3 class="font-semibold text-base text-white">Matriz Comparativa Detallada (8 Seleccionados)</h3>
-                    <p class="text-xs text-slate-400">Filtra por tipo de activo para analizar el duelo A vs B en detalle.</p>
+                    <h3 class="font-semibold text-base text-white">Matriz Comparativa Detallada</h3>
+                    <p class="text-xs text-slate-400">Listado completo de productos seleccionados y personalizados.</p>
                 </div>
                 
-                <!-- Botones de Filtro Rápido -->
+                <!-- Filtros rápidos -->
                 <div class="flex flex-wrap gap-1.5 text-xs">
-                    <button type="button" onclick="setFilter('all')" id="flt-all" class="flt-btn px-3 py-1.5 rounded-lg font-medium bg-sky-500 text-slate-950 transition cursor-pointer">Todos (8)</button>
+                    <button type="button" onclick="setFilter('all')" id="flt-all" class="flt-btn px-3 py-1.5 rounded-lg font-medium bg-sky-500 text-slate-950 transition cursor-pointer">Todos</button>
                     <button type="button" onclick="setFilter('Fondo Indexado')" id="flt-Fondo Indexado" class="flt-btn px-3 py-1.5 rounded-lg font-medium bg-slate-800 text-slate-300 hover:bg-slate-700 transition cursor-pointer">Fondos</button>
                     <button type="button" onclick="setFilter('ETF')" id="flt-ETF" class="flt-btn px-3 py-1.5 rounded-lg font-medium bg-slate-800 text-slate-300 hover:bg-slate-700 transition cursor-pointer">ETFs</button>
                     <button type="button" onclick="setFilter('Monetario')" id="flt-Monetario" class="flt-btn px-3 py-1.5 rounded-lg font-medium bg-slate-800 text-slate-300 hover:bg-slate-700 transition cursor-pointer">Monetarios</button>
@@ -207,9 +210,7 @@
                 </div>
             </div>
 
-            <div id="comparison-table">
-                <!-- Generado por JS -->
-            </div>
+            <div id="comparison-table"></div>
         </div>
 
     </main>
@@ -221,35 +222,58 @@
 
     <script>
         const PRODUCTS = {
-            // Fondos Indexados
-            vanguard_world: { type: 'Fondo Indexado', badgeColor: 'text-sky-400', name: 'Vanguard Global Stock Index', isin: 'IE00B03HCZ61', ter: 0.18, return10y: '+11.2% / año', replication: 'Física completa', fiscality: 'Traspasable (Sin peaje fiscal)', risk: 'Medio (Global)' },
-            amundi_world: { type: 'Fondo Indexado', badgeColor: 'text-sky-400', name: 'Amundi Index MSCI World', isin: 'LU1829221024', ter: 0.12, return10y: '+11.0% / año', replication: 'Sintética / Física', fiscality: 'Traspasable (Sin peaje fiscal)', risk: 'Medio (Global)' },
-            ishares_world_fund: { type: 'Fondo Indexado', badgeColor: 'text-sky-400', name: 'iShares Developed World Index', isin: 'IE00B62WCL09', ter: 0.12, return10y: '+11.3% / año', replication: 'Física optimizada', fiscality: 'Traspasable (Sin peaje fiscal)', risk: 'Medio (Global)' },
-            vanguard_sp500: { type: 'Fondo Indexado', badgeColor: 'text-sky-400', name: 'Vanguard S&P 500 Index', isin: 'IE0032620787', ter: 0.10, return10y: '+13.4% / año', replication: 'Física completa', fiscality: 'Traspasable (Sin peaje fiscal)', risk: 'Medio-Alto (EE.UU.)' },
-            vanguard_em: { type: 'Fondo Indexado', badgeColor: 'text-sky-400', name: 'Vanguard Emerging Markets', isin: 'IE0031786696', ter: 0.23, return10y: '+4.8% / año', replication: 'Física optimizada', fiscality: 'Traspasable (Sin peaje fiscal)', risk: 'Alto (Emergentes)' },
-            
-            // ETFs
-            ishares_sp500: { type: 'ETF', badgeColor: 'text-indigo-400', name: 'iShares Core S&P 500 ETF', isin: 'IE00B5BMR087', ter: 0.07, return10y: '+13.5% / año', replication: 'Física completa', fiscality: 'Tributa al vender', risk: 'Medio-Alto (EE.UU.)' },
-            vanguard_vwce: { type: 'ETF', badgeColor: 'text-indigo-400', name: 'Vanguard FTSE All-World ETF', isin: 'IE00BK5BQT80', ter: 0.22, return10y: '+10.8% / año', replication: 'Física optimizada', fiscality: 'Tributa al vender', risk: 'Medio (Global + EM)' },
-            ishares_msci_world: { type: 'ETF', badgeColor: 'text-indigo-400', name: 'iShares Core MSCI World ETF', isin: 'IE00B4L5Y983', ter: 0.20, return10y: '+11.2% / año', replication: 'Física optimizada', fiscality: 'Tributa al vender', risk: 'Medio (Desarrollados)' },
-            nasdaq_qqq: { type: 'ETF', badgeColor: 'text-indigo-400', name: 'Invesco EQQQ Nasdaq-100', isin: 'IE0032077012', ter: 0.30, return10y: '+17.6% / año', replication: 'Física completa', fiscality: 'Tributa al vender', risk: 'Alto (Tecnología)' },
-            ishares_gold: { type: 'ETF', badgeColor: 'text-indigo-400', name: 'iShares Physical Gold ETC', isin: 'IE00B4ND3602', ter: 0.12, return10y: '+9.4% / año', replication: 'Oro físico asignado', fiscality: 'Tributa al vender', risk: 'Medio (Refugio / Divisa)' },
-
-            // Monetarios
-            groupama: { type: 'Monetario', badgeColor: 'text-emerald-400', name: 'Groupama Trésorerie IC', isin: 'FR0000989626', ter: 0.10, return10y: 'TIR actual ~3.45%', replication: 'Deuda corto plazo', fiscality: 'Traspasable (Sin peaje fiscal)', risk: 'Muy Bajo (EUR)' },
-            axa_treasury: { type: 'Monetario', badgeColor: 'text-emerald-400', name: 'AXA Court Terme AC', isin: 'FR0000447823', ter: 0.12, return10y: 'TIR actual ~3.35%', replication: 'Deuda corto plazo', fiscality: 'Traspasable (Sin peaje fiscal)', risk: 'Muy Bajo (EUR)' },
-            db_xtrackers: { type: 'Monetario', badgeColor: 'text-emerald-400', name: 'Xtrackers II EUR Overnight (ETF)', isin: 'LU0290358497', ter: 0.10, return10y: 'TIR actual ~3.55%', replication: 'Sintética (€STR)', fiscality: 'Tributa al vender (Es ETF)', risk: 'Muy Bajo (EUR)' },
-            amundi_euro_liq: { type: 'Monetario', badgeColor: 'text-emerald-400', name: 'Amundi Euro Liquidity-Rated', isin: 'FR0010510800', ter: 0.10, return10y: 'TIR actual ~3.40%', replication: 'Deuda corto plazo', fiscality: 'Traspasable (Sin peaje fiscal)', risk: 'Muy Bajo (EUR)' },
-
-            // Acciones
-            apple: { type: 'Acción', badgeColor: 'text-amber-400', name: 'Apple Inc. (AAPL)', isin: 'US0378331005', ter: 0.00, return10y: '+24.5% / año', replication: 'Acción directa (Div. 0.45%)', fiscality: 'Tributa al vender', risk: 'Alto (Individual)' },
-            microsoft: { type: 'Acción', badgeColor: 'text-amber-400', name: 'Microsoft Corp. (MSFT)', isin: 'US5949181045', ter: 0.00, return10y: '+26.2% / año', replication: 'Acción directa (Div. 0.72%)', fiscality: 'Tributa al vender', risk: 'Alto (Individual)' },
-            nvidia: { type: 'Acción', badgeColor: 'text-amber-400', name: 'NVIDIA Corp. (NVDA)', isin: 'US67066G1040', ter: 0.00, return10y: '+58.0% / año', replication: 'Acción directa (Div. 0.03%)', fiscality: 'Tributa al vender', risk: 'Muy Alto (Individual)' },
-            coca_cola: { type: 'Acción', badgeColor: 'text-amber-400', name: 'The Coca-Cola Co. (KO)', isin: 'US1912161007', ter: 0.00, return10y: '+8.5% / año', replication: 'Acción directa (Div. 3.05%)', fiscality: 'Tributa al vender', risk: 'Medio (Defensiva)' },
-            inditex: { type: 'Acción', badgeColor: 'text-amber-400', name: 'Inditex S.A. (ITX)', isin: 'ES0148396007', ter: 0.00, return10y: '+10.4% / año', replication: 'Acción directa (Div. 3.10%)', fiscality: 'Tributa al vender', risk: 'Medio-Alto (Retail)' }
+            vanguard_world: { type: 'Fondo Indexado', badgeColor: 'text-sky-400', name: 'Vanguard Global Stock Index', isin: 'IE00B03HCZ61', ter: 0.18, return10y: '+11.2% / año', replication: 'Física completa', fiscality: 'Traspasable', risk: 'Medio' },
+            amundi_world: { type: 'Fondo Indexado', badgeColor: 'text-sky-400', name: 'Amundi Index MSCI World', isin: 'LU1829221024', ter: 0.12, return10y: '+11.0% / año', replication: 'Sintética / Física', fiscality: 'Traspasable', risk: 'Medio' },
+            ishares_sp500: { type: 'ETF', badgeColor: 'text-indigo-400', name: 'iShares Core S&P 500 ETF', isin: 'IE00B5BMR087', ter: 0.07, return10y: '+13.5% / año', replication: 'Física completa', fiscality: 'Tributa al vender', risk: 'Medio-Alto' },
+            vanguard_vwce: { type: 'ETF', badgeColor: 'text-indigo-400', name: 'Vanguard FTSE All-World ETF', isin: 'IE00BK5BQT80', ter: 0.22, return10y: '+10.8% / año', replication: 'Física optimizada', fiscality: 'Tributa al vender', risk: 'Medio' },
+            groupama: { type: 'Monetario', badgeColor: 'text-emerald-400', name: 'Groupama Trésorerie IC', isin: 'FR0000989626', ter: 0.10, return10y: 'TIR actual ~3.45%', replication: 'Corto plazo EUR', fiscality: 'Traspasable', risk: 'Muy Bajo' },
+            axa_treasury: { type: 'Monetario', badgeColor: 'text-emerald-400', name: 'AXA Court Terme AC', isin: 'FR0000447823', ter: 0.12, return10y: 'TIR actual ~3.35%', replication: 'Corto plazo EUR', fiscality: 'Traspasable', risk: 'Muy Bajo' },
+            apple: { type: 'Acción', badgeColor: 'text-amber-400', name: 'Apple Inc. (AAPL)', isin: 'US0378331005', ter: 0.00, return10y: '+24.5% / año', replication: 'Acción directa', fiscality: 'Tributa al vender', risk: 'Alto' },
+            microsoft: { type: 'Acción', badgeColor: 'text-amber-400', name: 'Microsoft Corp. (MSFT)', isin: 'US5949181045', ter: 0.00, return10y: '+26.2% / año', replication: 'Acción directa', fiscality: 'Tributa al vender', risk: 'Alto' }
         };
 
         let currentFilter = 'all';
+
+        function addCustomProduct() {
+            const rawInput = document.getElementById('custom-input').value.trim().toUpperCase();
+            const prodType = document.getElementById('custom-type').value;
+
+            if (!rawInput) {
+                alert('Por favor, introduce un Ticker o ISIN válido.');
+                return;
+            }
+
+            const key = 'custom_' + rawInput.toLowerCase().replace(/[^a-z0-9]/g, '_');
+            
+            // Generar valores estimados coherentes según el tipo seleccionado
+            let estTer = prodType === 'Acción' ? 0.00 : (prodType === 'ETF' ? 0.15 : 0.20);
+            let estReturn = prodType === 'Monetario' ? 'TIR actual ~3.5%' : (prodType === 'Acción' ? '+15.0% / año' : '+10.5% / año');
+
+            PRODUCTS[key] = {
+                type: prodType,
+                badgeColor: prodType === 'ETF' ? 'text-indigo-400' : (prodType === 'Fondo Indexado' ? 'text-sky-400' : (prodType === 'Monetario' ? 'text-emerald-400' : 'text-amber-400')),
+                name: `Personalizado (${rawInput})`,
+                isin: rawInput.length >= 10 ? rawInput : 'CUSTOM-' + rawInput,
+                ter: estTer,
+                return10y: estReturn,
+                replication: 'Estimado / Búsqueda',
+                fiscality: prodType.includes('Fondo') || prodType.includes('Monetario') ? 'Traspasable' : 'Tributa al vender',
+                risk: 'Variable'
+            };
+
+            // Añadir la nueva opción a todos los desplegables de la misma categoría o generales
+            const targetSelects = document.querySelectorAll('.sel-prod');
+            targetSelects.forEach(sel => {
+                const opt = document.createElement('option');
+                opt.value = key;
+                opt.text = `${rawInput} (${prodType})`;
+                sel.add(opt);
+            });
+
+            document.getElementById('custom-input').value = '';
+            updateComparison();
+            alert(`¡Producto "${rawInput}" añadido correctamente y disponible en los selectores!`);
+        }
 
         function setFilter(filterVal) {
             currentFilter = filterVal;
@@ -257,105 +281,4 @@
                 btn.className = 'flt-btn px-3 py-1.5 rounded-lg font-medium bg-slate-800 text-slate-300 hover:bg-slate-700 transition cursor-pointer';
             });
             const activeBtn = document.getElementById(`flt-${filterVal}`);
-            if (activeBtn) {
-                activeBtn.className = 'flt-btn px-3 py-1.5 rounded-lg font-medium bg-sky-500 text-slate-950 transition cursor-pointer';
-            }
-            updateComparison();
-        }
-
-        function updateDuelSummary(elementId, itemA, itemB) {
-            const diffTer = Math.abs(itemA.ter - itemB.ter).toFixed(2);
-            let terMsg = '';
-            if (itemA.ter === itemB.ter) {
-                terMsg = `<span class="text-slate-400">Empate en TER (${itemA.ter.toFixed(2)}%)</span>`;
-            } else if (itemA.ter < itemB.ter) {
-                terMsg = `<span class="text-emerald-400">A es ${diffTer}% más barato</span>`;
-            } else {
-                terMsg = `<span class="text-emerald-400">B es ${diffTer}% más barato</span>`;
-            }
-
-            document.getElementById(elementId).innerHTML = `
-                <div class="flex justify-between text-slate-300">
-                    <span>TER A vs B:</span>
-                    <span class="font-mono font-semibold">${itemA.ter.toFixed(2)}% vs ${itemB.ter.toFixed(2)}%</span>
-                </div>
-                <div class="text-[11px] font-mono">${terMsg}</div>
-            `;
-        }
-
-        function updateComparison() {
-            const selections = [
-                { slot: 'A', item: PRODUCTS[document.getElementById('sel-fondo-a').value] },
-                { slot: 'B', item: PRODUCTS[document.getElementById('sel-fondo-b').value] },
-                { slot: 'A', item: PRODUCTS[document.getElementById('sel-etf-a').value] },
-                { slot: 'B', item: PRODUCTS[document.getElementById('sel-etf-b').value] },
-                { slot: 'A', item: PRODUCTS[document.getElementById('sel-monetary-a').value] },
-                { slot: 'B', item: PRODUCTS[document.getElementById('sel-monetary-b').value] },
-                { slot: 'A', item: PRODUCTS[document.getElementById('sel-stock-a').value] },
-                { slot: 'B', item: PRODUCTS[document.getElementById('sel-stock-b').value] }
-            ];
-
-            // Actualizar mini-duelos en las tarjetas superiores
-            updateDuelSummary('duel-fondo', selections[0].item, selections[1].item);
-            updateDuelSummary('duel-etf', selections[2].item, selections[3].item);
-            updateDuelSummary('duel-monetary', selections[4].item, selections[5].item);
-            updateDuelSummary('duel-stock', selections[6].item, selections[7].item);
-
-            // Filtrar según pestaña activa
-            const filtered = currentFilter === 'all' 
-                ? selections 
-                : selections.filter(s => s.item.type === currentFilter);
-
-            // Renderizar tabla
-            let tableHtml = `
-                <table class="w-full text-left text-xs sm:text-sm">
-                    <thead>
-                        <tr class="border-b border-slate-800 text-slate-400">
-                            <th class="py-3 px-3">Lado</th>
-                            <th class="py-3 px-3">Producto / ISIN</th>
-                            <th class="py-3 px-3">Categoría</th>
-                            <th class="py-3 px-3">Comisión (TER)</th>
-                            <th class="py-3 px-3">Rentabilidad / TIR</th>
-                            <th class="py-3 px-3">Réplica / Dividendo</th>
-                            <th class="py-3 px-3">Fiscalidad</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-800/60">
-            `;
-
-            filtered.forEach(entry => {
-                const p = entry.item;
-                const slotBadge = entry.slot === 'A' 
-                    ? 'bg-sky-500/20 text-sky-300 border-sky-500/30' 
-                    : 'bg-purple-500/20 text-purple-300 border-purple-500/30';
-
-                tableHtml += `
-                    <tr class="hover:bg-slate-900/40 transition">
-                        <td class="py-3 px-3">
-                            <span class="px-2 py-0.5 rounded border font-mono text-xs font-bold ${slotBadge}">${entry.slot}</span>
-                        </td>
-                        <td class="py-3 px-3">
-                            <div class="font-semibold text-white">${p.name}</div>
-                            <div class="text-[11px] font-mono text-slate-500">${p.isin}</div>
-                        </td>
-                        <td class="py-3 px-3">
-                            <span class="font-mono text-xs font-medium ${p.badgeColor}">${p.type}</span>
-                        </td>
-                        <td class="py-3 px-3 font-mono font-bold text-white">${p.ter.toFixed(2)}%</td>
-                        <td class="py-3 px-3 font-mono text-emerald-400 font-medium">${p.return10y}</td>
-                        <td class="py-3 px-3 text-slate-300 text-xs">${p.replication}</td>
-                        <td class="py-3 px-3 text-slate-400 text-xs">${p.fiscality}</td>
-                    </tr>
-                `;
-            });
-
-            tableHtml += `</tbody></table>`;
-            document.getElementById('comparison-table').innerHTML = tableHtml;
-        }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            updateComparison();
-        });
-    </script>
-</body>
-</html>
+            if (activeBtn) activeBtn.className = 'flt-btn px-3 py-1.5 rounded-lg font-medium bg
