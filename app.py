@@ -64,7 +64,7 @@ def consultar_yahoo(ticker_o_isin: str, categoria: str):
         "netExpenseRatio"
     )
     if raw_ter is not None:
-        ter = round(float(raw_ter) * 1, 2)
+        ter = round(float(raw_ter) * 100, 2)
     else:
         ter = (
             0.00
